@@ -114,7 +114,12 @@ def put_to_store(email):
   '''
   email is put into store
   '''
-  pass
+  store = get_store(config)
+  tiddler = Tiddler(email['subject'])
+  tiddler.bag = determine_bag(email['to'])
+  tiddler.text = email['body']
+  tiddler.tags = email['to'].split('@')[0][5:].split('+')
+  store.put(tiddler)
 
 def get_action(email):
   to = email["to"].split("@")
