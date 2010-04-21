@@ -1,3 +1,8 @@
+"""
+TODO: add in policy checking and mapping email addresses to users
+"""
+
+from tiddlyweb.commands import make_command
 from tiddlyweb.model.bag import Bag
 from tiddlyweb.model.tiddler import Tiddler
 from tiddlyweb.model.recipe import Recipe
@@ -7,9 +12,12 @@ from tiddlywebplugins.utils import get_store
 from tiddlyweb.store import Store,NoTiddlerError, NoBagError, NoRecipeError
 from tiddlyweb.config import config
 
+@make_command()
 def parse_input(raw):
   """
   entry point from mail server
+  
+  twanager parse_input <raw email from server here>
   
   take a raw email input and turn it into something we can operate on
   """
@@ -26,7 +34,24 @@ def make_subscription(email):
   pass
 
 def retrieve_from_store(email):
-  pass
+    """
+    get the tiddler requested by the email from the store 
+    and return it as an email
+    """
+    store = get_store(config)
+    tiddler = Tiddler(email['subject'])
+    tiddler.recipe = determine_recipe(email['to'])
+
+    tiddler = store.get(tiddler)
+
+    response_email = {
+        'from': email['to'],
+        'to': email['from'],
+        'subject': tiddler.title,
+        'body': tiddler.text
+    }
+    
+    return response_email
   
 def put_to_store(email):
   '''
@@ -51,3 +76,10 @@ def handle_email(email):
     return make_subscription(email)
   elif action =='unsubscribe':
     return delete_subscription(email)
+
+def init(config_in):
+    """
+    initialise email module
+    """
+    global config
+    config = config_in
