@@ -29,7 +29,7 @@ def parse_input(raw):
   smtp.send(email_to_send)
   """
 
-def determine_recipe(emailAddress):
+def determine_bag(emailAddress):
   handle,host = emailAddress.split("@")
   host_bits=  host.split(".")
   return "%s_private"%host_bits[0]
@@ -45,7 +45,7 @@ def get_subscriptions_bag(store):
   
 def delete_subscription(email):
   store = get_store(config)
-  recipe = determine_recipe(email["to"])
+  recipe = determine_bag(email["to"])
   fromAddress = email["from"]  
   subscription_bag= get_subscriptions_bag(store)
   
@@ -64,7 +64,7 @@ def delete_subscription(email):
       
 def make_subscription(email):
   store = get_store(config)
-  recipe = determine_recipe(email["to"])
+  recipe = determine_bag(email["to"])
   fromAddress = email["from"]
   subscription_bag= get_subscriptions_bag(store)
   subscribers_tiddler = Tiddler("/recipes/%s/tiddlers"%recipe,subscription_bag)
@@ -86,15 +86,26 @@ def retrieve_from_store(email):
     """
     store = get_store(config)
     tiddler = Tiddler(email['subject'])
-    tiddler.recipe = determine_recipe(email['to'])
-
-    tiddler = store.get(tiddler)
+    bag = determine_bag(email['to'])
+    tiddler.bag = bag
+    
+    try:
+        tiddler = store.get(tiddler)
+        response_text = tiddler.text
+    except NoTiddlerError:
+        #Tiddler not found. Return a list of all tiddlers
+        bag = Bag(bag)
+        bag = store.get(bag)
+        response_text = 'The following tiddlers are in %s:\n' % email['to'].split('@')[1]
+        tiddlers = bag.gen_tiddlers()
+        tiddlers = [tiddler for tiddler in tiddlers]
+        response_text += '\n'.join([tiddler.title for tiddler in tiddlers])
 
     response_email = {
         'from': email['to'],
         'to': email['from'],
         'subject': tiddler.title,
-        'body': tiddler.text
+        'body': response_text
     }
     
     return response_email

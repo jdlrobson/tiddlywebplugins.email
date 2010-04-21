@@ -42,13 +42,11 @@ def test_view_tiddlers():
   
   #run
   email = mailer.handle_email({"to":"view@jon.tiddlyspace.com","from":"jdlrobson@gmail.com","subject":"","body":""})
-
   #verify
   assert email["to"] == "jdlrobson@gmail.com"
-  assert email["body"] == '''The following tiddlers are in http://jon.tiddlyspace.com:
-  one
-  two
-  three
-  four
-  '''
+  body = email['body'].splitlines()
+  assert body.pop(0) == 'The following tiddlers are in jon.tiddlyspace.com:'
+  assert len(body) == 4
+  for tiddler_name in body:
+      assert tiddler_name in ['one','two','three','four']
 
