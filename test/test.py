@@ -11,7 +11,7 @@ from tiddlyweb.config import config
 
 def setup(store):
   #setup a clean store
-  for bag_name in ["jon_private","ben_private","osmosoft_private"]:
+  for bag_name in ["jon_private","ben_private","osmosoft_private","subscriptions.daily"]:
     bag = Bag(bag_name)
     try:
       store.delete(bag)
