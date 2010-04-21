@@ -21,13 +21,13 @@ def test_subscribe():
   email = mailer.handle_email({"to":"subscribe@osmosoft.tiddlyspace.com","from":"bengillies@gmail.com","subject":"","body":""})
   
   #verify
-  tid = store.get(Tiddler("/recipes/osmosoft_private/tiddlers.atom","subscriptions.daily"))
+  tid = store.get(Tiddler("/recipes/osmosoft_private/tiddlers","subscriptions.daily"))
   assert tid.text == "bengillies@gmail.com"
  
   email = mailer.handle_email({"to":"subscribe@osmosoft.tiddlyspace.com","from":"jeremy@osmosoft.com","subject":"","body":""})
   email = mailer.handle_email({"to":"subscribe@osmosoft.tiddlyspace.com","from":"jdlr@osmosoft.com","subject":"","body":""})
   
-  tid = store.get(Tiddler("/recipes/osmosoft_private/tiddlers.atom","subscriptions.daily"))
+  tid = store.get(Tiddler("/recipes/osmosoft_private/tiddlers","subscriptions.daily"))
   lines = tid.text.splitlines()
   assert len(lines) == 3
   for i in [u"bengillies@gmail.com",u"jeremy@osmosoft.com",u"jdlr@osmosoft.com"]:
@@ -35,7 +35,7 @@ def test_subscribe():
     
   email = mailer.handle_email({"to":"unsubscribe@osmosoft.tiddlyspace.com","from":"jdlr@osmosoft.com","subject":"","body":""})
   email = mailer.handle_email({"to":"unsubscribe@osmosoft.tiddlyspace.com","from":"jdlrobson@gmail.com","subject":"","body":""})
-  tid = store.get(Tiddler("/recipes/osmosoft_private/tiddlers.atom","subscriptions.daily"))
+  tid = store.get(Tiddler("/recipes/osmosoft_private/tiddlers","subscriptions.daily"))
   lines = tid.text.splitlines()
   assert len(lines) == 2
   for i in [u"bengillies@gmail.com",u"jeremy@osmosoft.com"]:
