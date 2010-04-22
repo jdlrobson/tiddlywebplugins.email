@@ -27,7 +27,7 @@ def test_view():
   #verify
   assert email == {"to":"jdlrobson@gmail.com","from":"view@jon.tiddlyspace.com","subject":"GettingStarted","body":"the cat jumped over the moon"}
   
-    
+
 def test_view_tiddlers():
   #setup
   setup(store)
@@ -50,3 +50,18 @@ def test_view_tiddlers():
   for tiddler_name in body:
       assert tiddler_name in ['one','two','three','four']
 
+def test_view_reply():
+    #setup
+    setup(store)
+    tiddler = Tiddler('GettingStarted', 'ben_private')
+    tiddler.text = 'The quick brown fox jumped over the lazy dog'
+    store.put(tiddler)
+    
+    #run
+    email = mailer.handle_email({'to': 'view@ben.tiddlyspace.com', 'from': 'bengillies@gmail.com', 'subject': 'RE: GettingStarted', 'body': ''})
+    
+    #verify
+    assert email['to'] == 'bengillies@gmail.com'
+    assert email['from'] == 'view@ben.tiddlyspace.com'
+    assert email['subject'] == 'GettingStarted'
+    assert email['body'] == 'The quick brown fox jumped over the lazy dog'
