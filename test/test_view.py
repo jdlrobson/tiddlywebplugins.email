@@ -1,56 +1,84 @@
-from tiddlywebplugins import email as mailer
-from tiddlyweb.model.bag import Bag
-from tiddlyweb.model.tiddler import Tiddler
-from tiddlyweb.model.recipe import Recipe
-import logging
-from tiddlyweb import control
-from tiddlywebplugins.utils import get_store
-from tiddlyweb.store import Store,NoTiddlerError, NoBagError, NoRecipeError
-from tiddlyweb.config import config
+"""
+Tests for interfacing using the view@... email address
+"""
 from test import setup
+from tiddlywebplugins import email as mailer
 
-def setup_module(module):
-  module.store = Store(config['server_store'][0], config['server_store'][1],environ={'tiddlyweb.config': config})
-  module.environ = {'tiddlyweb.store':module.store,'tiddlyweb.config': config}
+from tiddlyweb.model.tiddler import Tiddler 
+from tiddlyweb.config import config
+
+from tiddlywebplugins.utils import get_store
+
+def setup_module(module): 
+    module.store = get_store(config)
+    module.environ = {
+        'tiddlyweb.store': module.store,
+        'tiddlyweb.config': config
+    }
 
 def test_view():
-  #setup
-  setup(store)
-  tid = Tiddler("GettingStarted","jon_private")
-  tid.text= "the cat jumped over the moon"
-  tid.tags = ["hello","world"]
-  store.put(tid)
-  
-  #run
-  email = mailer.handle_email({"to":"view@jon.tiddlyspace.com","from":"jdlrobson@gmail.com","subject":"GettingStarted","body":""})
-  
-  #verify
-  assert email == {"to":"jdlrobson@gmail.com","from":"view@jon.tiddlyspace.com","subject":"GettingStarted","body":"the cat jumped over the moon"}
-  
+    """
+    test a request for viewing a single tiddler
+    """
+    #setup
+    setup(store)
+    tiddler = Tiddler('GettingStarted', 'jon_private')
+    tiddler.text = 'the cat jumped over the moon'
+    tiddler.tags = ['hello', 'world']
+    store.put(tiddler)
+
+    #run
+    email = mailer.handle_email({
+        'to': 'view@jon.tiddlyspace.com',
+        'from': 'jdlrobson@gmail.com',
+        'subject': 'GettingStarted',
+        'body': ''
+    })
+
+    #verify
+    assert email == {
+        'to': 'jdlrobson@gmail.com',
+        'from': 'view@jon.tiddlyspace.com',
+        'subject': 'GettingStarted',
+        'body': 'the cat jumped over the moon'
+    }
 
 def test_view_tiddlers():
-  #setup
-  setup(store)
-  tid = Tiddler("one","jon_private")
-  store.put(tid)
-  tid = Tiddler("two","jon_private")
-  store.put(tid)
-  tid = Tiddler("three","jon_private")
-  store.put(tid)
-  tid = Tiddler("four","jon_private")
-  store.put(tid)
-  
-  #run
-  email = mailer.handle_email({"to":"view@jon.tiddlyspace.com","from":"jdlrobson@gmail.com","subject":"","body":""})
-  #verify
-  assert email["to"] == "jdlrobson@gmail.com"
-  body = email['body'].splitlines()
-  assert body.pop(0) == 'The following tiddlers are in jon.tiddlyspace.com:'
-  assert len(body) == 4
-  for tiddler_name in body:
-      assert tiddler_name in ['one','two','three','four']
+    """
+    test a request for viewing all tiddlers in a bag
+    """
+    #setup
+    setup(store)
+    tiddler = Tiddler('one', 'jon_private')
+    store.put(tiddler)
+    tiddler = Tiddler('two', 'jon_private')
+    store.put(tiddler)
+    tiddler = Tiddler('three', 'jon_private')
+    store.put(tiddler)
+    tiddler = Tiddler('four', 'jon_private')
+    store.put(tiddler)
+
+    #run
+    email = mailer.handle_email({
+        'to': 'view@jon.tiddlyspace.com',
+        'from': 'jdlrobson@gmail.com',
+        'subject': '',
+        'body': ''
+    })
+
+    #verify
+    assert email['to'] == 'jdlrobson@gmail.com'
+    body = email['body'].splitlines()
+    assert body.pop(0) == 'The following tiddlers are in jon.tiddlyspace.com:'
+    assert len(body) == 4
+    for tiddler_name in body: 
+        assert tiddler_name in ['one', 'two', 'three', 'four']
 
 def test_view_reply():
+    """
+    test a request for viewing based on a reply to a previous response
+    ie - the subject has an RE: in it.
+    """
     #setup
     setup(store)
     tiddler = Tiddler('GettingStarted', 'ben_private')
@@ -58,7 +86,12 @@ def test_view_reply():
     store.put(tiddler)
     
     #run
-    email = mailer.handle_email({'to': 'view@ben.tiddlyspace.com', 'from': 'bengillies@gmail.com', 'subject': 'RE: GettingStarted', 'body': ''})
+    email = mailer.handle_email({
+        'to': 'view@ben.tiddlyspace.com',
+        'from': 'bengillies@gmail.com',
+        'subject': 'RE: GettingStarted',
+        'body': ''
+    })
     
     #verify
     assert email['to'] == 'bengillies@gmail.com'

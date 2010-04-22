@@ -14,6 +14,9 @@ from tiddlyweb.config import config
 
 DEFAULT_SUBSCRIPTION = "daily"
 
+class EmailAddressError(Exception):
+    pass
+
 @make_command()
 def parse_input(raw):
   """
@@ -30,9 +33,15 @@ def parse_input(raw):
   """
 
 def determine_bag(emailAddress):
-  handle,host = emailAddress.split("@")
-  host_bits=  host.split(".")
-  return "%s_private"%host_bits[0]
+  """
+  temporary function to map email address to bag name
+  
+  TODO - replace with a proper mapping function
+       - add support for choice between recipes and bags
+  """
+  handle, host = emailAddress.split("@")
+  host_bits = host.split(".")
+  return "%s_private" % host_bits[0]
 
 def get_subscriptions_bag(store):
   subscription_bag = "subscriptions.%s"%DEFAULT_SUBSCRIPTION
@@ -119,47 +128,51 @@ def retrieve_from_store(email):
     return response_email
   
 def put_to_store(email):
-  '''
-  email is put into store
-  '''
-  store = get_store(config)
-  tiddler = Tiddler(email['subject'])
-  tiddler.bag = determine_bag(email['to'])
-  tiddler.text = email['body']
-  toTags, toBase = email['to'].split('@')
-  tiddler.tags = toTags.split('+')
-  tiddler.tags.remove('post')
-  store.put(tiddler)
-  
-  response_email = {
-    'from': 'view@%s' % toBase,
-    'to': email['from'],
-    'subject': tiddler.title,
-    'body': tiddler.text
-  }
-  
-  return response_email
+    """
+    email is put into store
+    """
+    store = get_store(config)
+    tiddler = Tiddler(email['subject'])
+    tiddler.bag = determine_bag(email['to'])
+    tiddler.text = email['body']
+    toTags, toBase = email['to'].split('@')
+    tiddler.tags = toTags.split('+')
+    tiddler.tags.remove('post')
+    store.put(tiddler)
 
-def get_action(email):
-  """
-  determine whether we are posting, viewing or subscribing
-  """
-  to = email["to"].split("@", 1)[0]
-  return to.split('+', 1)[0]
+    response_email = {
+        'from': 'view@%s' % toBase,
+        'to': email['from'],
+        'subject': tiddler.title,
+        'body': tiddler.text
+    }
+
+    return response_email
+
+def get_action(to):
+    """
+    determine whether we are posting, viewing or subscribing
+    """
+    first_part = to.split("@", 1)[0]
+    return first_part.split('+', 1)[0]
   
 def handle_email(email):
-  '''
-  Takes an email and figures out what to do with it
-  '''
-  action = get_action(email)
-  if action == 'view':
-    return retrieve_from_store(email)
-  elif action =='post':
-    return put_to_store(email)
-  elif action =='subscribe':
-    return make_subscription(email)
-  elif action =='unsubscribe':
-    return delete_subscription(email)
+    """
+    Takes an email and figures out what to do with it
+    """
+    action = {
+        'view': retrieve_from_store,
+        'post': put_to_store,
+        'subscribe': make_subscription,
+        'unsubscribe': delete_subscription
+    }
+
+    try:
+        response_email = action[get_action(email['to'])](email)
+    except KeyError:
+        raise EmailAddressError('Unsupported email address %s' % email['to'])
+
+    return response_email
 
 def init(config_in):
     """
