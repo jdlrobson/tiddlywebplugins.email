@@ -1,7 +1,7 @@
 """
 TODO: add in policy checking and mapping email addresses to users
 """
-
+import re
 from tiddlyweb.commands import make_command
 from tiddlyweb.model.bag import Bag
 from tiddlyweb.model.tiddler import Tiddler
@@ -79,13 +79,21 @@ def make_subscription(email):
     subscribers_tiddler.text = fromAddress 
     store.put(subscribers_tiddler)
 
+def clean_subject(subject):
+    """
+    remove RE: and FWD: from the subject
+    """
+    regex = '^(?:(?:RE\: ?)|(?:FWD: ?))+'
+    return re.sub(regex, '', subject)
+
 def retrieve_from_store(email):
     """
     get the tiddler requested by the email from the store 
     and return it as an email
     """
     store = get_store(config)
-    tiddler = Tiddler(email['subject'])
+    tiddler_title = clean_subject(email['subject'])
+    tiddler = Tiddler(tiddler_title)
     bag = determine_bag(email['to'])
     tiddler.bag = bag
     
@@ -118,12 +126,26 @@ def put_to_store(email):
   tiddler = Tiddler(email['subject'])
   tiddler.bag = determine_bag(email['to'])
   tiddler.text = email['body']
-  tiddler.tags = email['to'].split('@')[0][5:].split('+')
+  toTags, toBase = email['to'].split('@')
+  tiddler.tags = toTags.split('+')
+  tiddler.tags.remove('post')
   store.put(tiddler)
+  
+  response_email = {
+    'from': 'view@%s' % toBase,
+    'to': email['from'],
+    'subject': tiddler.title,
+    'body': tiddler.text
+  }
+  
+  return response_email
 
 def get_action(email):
-  to = email["to"].split("@")
-  return to[0]
+  """
+  determine whether we are posting, viewing or subscribing
+  """
+  to = email["to"].split("@", 1)[0]
+  return to.split('+', 1)[0]
   
 def handle_email(email):
   '''
