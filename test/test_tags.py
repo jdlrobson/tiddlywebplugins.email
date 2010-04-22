@@ -20,29 +20,31 @@ def test_posting_of_tags_via_email_address():
   tid.tags = ["rainbows","colourful"]
   store.put(tid)
   #run
-  mailer.handle_email({"to":"post+foo+bar+baz@ben.tiddlyspace.com","subject":"Hey there","body":"tiddler text"})
+  mailer.handle_email({"to":"post+foo+bar+baz@ben.tiddlyspace.com", 'from': 'foo@bar.com', "subject":"Hey there", "body":"tiddler text"})
   
   #verify
-  tid = store.get(tid)
-  assert tid.tags == ["rainbows","colourful","foo","bar","baz"]
-  
-def test_posting_of_tags_via_tag_address():
-  #setup
-  setup(store)
-  tid =Tiddler("GettingStarted","jon_private")
-  tid.tags = ["z"]
-  store.put(tid)
-  
-  #run
-  mailer.handle_email({"to":"tags@jon.tiddlyspace.com","subject":"GettingStarted","body":"foo,bar,baz"})
-  
-  #verify
-  tiddler = store.get(tid)
-  assert tiddler.tags == ["z","foo","bar","baz"]
-  
-  #run
-  mailer.handle_email({"to":"tags@jon.tiddlyspace.com","subject":"GettingStarted","body":"[[tiddlyweb fun]] [[tiddlytastical, commas]] tiddlywiki fun"})
-  
-  #verify
-  tiddler = store.get(tid)
-  assert tiddler.tags == ["z","foo","bar","baz","tiddlyweb fun","tiddlytastical, commas","tiddlywiki","fun"]
+  tiddler = Tiddler('Hey there', 'ben_private')
+  tiddler = store.get(tiddler)
+  assert tiddler.tags == ["foo","bar","baz"]
+
+#I'm not sure we need this?
+#def test_posting_of_tags_via_tag_address():
+#  #setup
+#  setup(store)
+#  tid =Tiddler("GettingStarted","jon_private")
+#  tid.tags = ["z"]
+#  store.put(tid)
+#  
+#  #run
+#  mailer.handle_email({"to":"tags@jon.tiddlyspace.com","subject":"GettingStarted","body":"foo,bar,baz"})
+#  
+#  #verify
+#  tiddler = store.get(tid)
+#  assert tiddler.tags == ["z","foo","bar","baz"]
+#  
+#  #run
+#  mailer.handle_email({"to":"tags@jon.tiddlyspace.com","subject":"GettingStarted","body":"[[tiddlyweb fun]] [[tiddlytastical, commas]] tiddlywiki fun"})
+#  
+#  #verify
+#  tiddler = store.get(tid)
+#  assert tiddler.tags == ["z","foo","bar","baz","tiddlyweb fun","tiddlytastical, commas","tiddlywiki","fun"]
