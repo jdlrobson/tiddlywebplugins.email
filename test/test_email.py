@@ -4,6 +4,16 @@ test some helper functions
 
 from tiddlywebplugins import email as mailer
 
+def test_get_email_host():
+    it = mailer.get_email_host("recipes/foo_public/tiddlers",{"server_host":{"scheme":"http","host":"tiddlyspace.com"}})
+    assert it == 'foo.tiddlyspace.com'
+    
+    it = mailer.get_email_host("bags/bar_public/tiddlers",{"server_host":{"scheme":"http","host":"foo.tiddlyfoobar.com"}})
+    assert it == 'bar.foo.tiddlyfoobar.com'
+    
+    it = mailer.get_email_host("bags/bar_public/tiddlers",{"server_host":{"scheme":"http","host":"www.tiddlywiki.com"}})
+    assert it == 'bar.tiddlywiki.com'
+    
 def test_get_action():
     """
     test extracting the intended action from the email address

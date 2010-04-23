@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:gml="http://www.opengis.net/gml" xmlns:georss="http://www.georss.org/georss">
+ 
+	<title>Tiddlers in bag for testing purposes</title>
+	<subtitle>A subtitle.</subtitle>
+	<id>urn:uuid:60a76c80-d399-11d9-b91C-0003939e0af6</id>
+	<updated>2003-12-13T18:30:02Z</updated>
+	<author>
+		<name>TiddlyWeb</name>
+		<email>tiddlyweb@tiddlyspace.com</email>
+	</author>
+ 
+</feed>

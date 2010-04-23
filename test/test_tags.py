@@ -41,7 +41,7 @@ def test_posting_of_tags():
     assert tiddler.tags == ['foo', 'bar', 'baz']
 
 """
-I'm not sure we need this?
+alternative tags implementation
 def test_posting_of_tags_via_tag_address():
   #setup
   setup(store)

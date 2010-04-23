@@ -98,7 +98,7 @@ def test_post_existing():
     assert tiddler.fields.get('geo.lat') == None
   
 """
-commented out until further notice  -- I'm not sure we want/need this?'
+#Test for a mechanism for allowing posting detailed tiddlers in future by advanced users
 def test_post_advanced(): #the body is how tiddlers are stored in textual representation
   #setup
   setup(store)

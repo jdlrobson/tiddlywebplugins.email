@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:gml="http://www.opengis.net/gml" xmlns:georss="http://www.georss.org/georss">
+ 
+	<title>Tiddlers in bag for testing purposes</title>
+	<subtitle>A subtitle.</subtitle>
+	<id>urn:uuid:60a76c80-d399-11d9-b91C-0003939e0af6</id>
+	<updated>2003-12-13T18:30:02Z</updated>
+	<author>
+		<name>TiddlyWeb</name>
+		<email>tiddlyweb@tiddlyspace.com</email>
+	</author>
+ 
+	<entry>
+		<title>The meaning of life</title>
+		<link href="http://monty.tiddlyspace.com/meaninglife" />
+		<updated>2003-12-13T18:30:02Z</updated>
+		<summary>The knights that go..</summary>
+	</entry>
+ 
+ 	<entry>
+		<title>Life of Brian</title>
+		<link href="http://monty.tiddlyspace.com/lifeofbrian" />
+		<updated>2001-12-13T18:30:02Z</updated>
+		<summary>He's been a very naughty boy.</summary>
+		<georss:where>
+      <gml:Point>
+        <gml:pos>51.023 0.429</gml:pos>
+      </gml:Point>
+    </georss:where>
+    
+	</entry>
+</feed>

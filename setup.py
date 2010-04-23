@@ -3,7 +3,7 @@ AUTHOR = 'Jon Robson'
 AUTHOR_EMAIL = 'jdlrobson@gmail.com'
 NAME = 'tiddlywebplugins.email'
 DESCRIPTION = 'Emails are nice as long as they are not spam.'
-VERSION = '0.1'
+VERSION = '0.2'
 
 
 import os

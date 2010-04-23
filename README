@@ -1,1 +1,25 @@
-READMES are for wimps. Nah, not really I'll just do it later.
+Provides an interface for communicating with and without TiddlyWeb.
+
+tiddlywebplugins.email 
+##########################
+provides the extendable framework
+
+tiddlywebplugins.mailagent
+##########################
+provides an implementation using smtp/pop and twanager as the mechanism for execution. Allows you to add tiddlers and pull tiddlers from a bag named email.
+emailing view@<host> or post@<host> will provide basic interaction
+
+config
+---------
+install by putting 'tiddlywebplugins.mailagent' into twanager_plugins on your server
+
+add the following with correctly filled in values
+'mailer':{"pop":"<pop server>","smtp":"<smtp server>:<host>","username":"<username>","password":"<password>"},
+
+use
+-----
+in the instance directory run:
+twanager make_digest subscriptions.daily
+twanager mail_agent
+
+Set up cronjobs to do this on a regular basis
