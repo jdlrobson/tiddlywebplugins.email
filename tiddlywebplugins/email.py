@@ -1,6 +1,7 @@
 """
 TODO: add in policy checking and mapping email addresses to users
 """
+import re
 from tiddlyweb.commands import make_command
 from tiddlyweb.model.bag import Bag
 from tiddlyweb.model.tiddler import Tiddler
@@ -13,6 +14,9 @@ from tiddlyweb.config import config
 import feedparser
 import datetime
 DEFAULT_SUBSCRIPTION = "daily"
+
+class EmailAddressError(Exception):
+    pass
 
 @make_command()
 def parse_input(raw):
@@ -30,9 +34,15 @@ def parse_input(raw):
   """
   
 def determine_bag(emailAddress):
-  handle,host = emailAddress.split("@")
-  host_bits=  host.split(".")
-  return "%s_private"%host_bits[0]
+  """
+  temporary function to map email address to bag name
+  
+  TODO - replace with a proper mapping function
+       - add support for choice between recipes and bags
+  """
+  handle, host = emailAddress.split("@")
+  host_bits = host.split(".")
+  return "%s_private" % host_bits[0]
 
 def get_subscriptions_bag(store):
   subscription_bag = "subscriptions.%s"%DEFAULT_SUBSCRIPTION
@@ -59,7 +69,9 @@ def delete_subscription(email):
     store.put(subscribers_tiddler)
   except NoTiddlerError:
     pass
-    
+  
+  return {"from":email["to"],"to":email["from"],"subject":"You have been unsubscribed to %s"%recipe,"body":"Harry the dog is currently whining in sadness."}
+  
       
 def make_subscription(email):
   store = get_store(config)
@@ -77,6 +89,8 @@ def make_subscription(email):
   except NoTiddlerError:
     subscribers_tiddler.text = fromAddress 
     store.put(subscribers_tiddler)
+    
+  return {"from":email["to"],"to":email["from"],"subject":"You have subscribed to %s"%recipe,"body":"You will now receive daily digests. To unsubscribe please email unsubscribe@%s"}
 
 def get_host(atomurl):
   resource = atomurl.split("/")[2]
@@ -136,14 +150,22 @@ def make_digest(args):
   for tiddler in bag.list_tiddlers():
     mail = make_digest_email(tiddler)
     send_email(mail)
-  
+
+def clean_subject(subject):
+    """
+    remove RE: and FWD: from the subject
+    """
+    regex = '^(?:(?:RE\: ?)|(?:FWD: ?))+'
+    return re.sub(regex, '', subject)
+
 def retrieve_from_store(email):
     """
     get the tiddler requested by the email from the store 
     and return it as an email
     """
     store = get_store(config)
-    tiddler = Tiddler(email['subject'])
+    tiddler_title = clean_subject(email['subject'])
+    tiddler = Tiddler(tiddler_title)
     bag = determine_bag(email['to'])
     tiddler.bag = bag
     
@@ -169,28 +191,54 @@ def retrieve_from_store(email):
     return response_email
   
 def put_to_store(email):
-  '''
-  email is put into store
-  '''
-  pass
+    """
+    email is put into store
+    """
+    store = get_store(config)
+    tiddler = Tiddler(email['subject'])
+    tiddler.bag = determine_bag(email['to'])
+    tiddler.text = email['body']
+    toTags, toBase = email['to'].split('@')
+    tiddler.tags = toTags.split('+')
+    tiddler.tags.remove('post')
+    store.put(tiddler)
 
-def get_action(email):
-  to = email["to"].split("@")
-  return to[0]
+    response_email = {
+        'from': 'view@%s' % toBase,
+        'to': email['from'],
+        'subject': tiddler.title,
+        'body': tiddler.text
+    }
+
+    return response_email
+
+def get_action(to):
+    """
+    determine whether we are posting, viewing or subscribing
+    """
+    if(type(to) == type({})):
+      to = to["to"]
+    first_part = to.split("@", 1)[0]
+    return first_part.split('+', 1)[0]
   
 def handle_email(email):
-  '''
-  Takes an email and figures out what to do with it
-  '''
-  action = get_action(email)
-  if action == 'view':
-    return retrieve_from_store(email)
-  elif action =='post':
-    return put_to_store(email)
-  elif action =='subscribe':
-    return make_subscription(email)
-  elif action =='unsubscribe':
-    return delete_subscription(email)
+    """
+    Takes an email and figures out what to do with it
+    """
+    action = {
+        'view': retrieve_from_store,
+        'post': put_to_store,
+        'subscribe': make_subscription,
+        'unsubscribe': delete_subscription
+    }
+
+    try:
+        response_email = action[get_action(email['to'])](email)
+    except KeyError:
+        raise EmailAddressError('Unsupported email address %s' % email['to'])
+    
+    send_email(response_email)
+    return response_email
 
 def send_email(mail):
   print "i dont know how to send email yet"

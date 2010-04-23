@@ -1,21 +1,25 @@
-from tiddlywebplugins import email as mailer
+"""
+set up functions required for tests
+"""
 from tiddlyweb.model.bag import Bag
-from tiddlyweb.model.tiddler import Tiddler
-from tiddlyweb.model.recipe import Recipe
-import logging
-from tiddlyweb import control
-from tiddlywebplugins.utils import get_store
-from tiddlyweb.store import Store,NoTiddlerError, NoBagError, NoRecipeError
-from tiddlyweb.config import config
+from tiddlyweb.store import NoBagError
 
 
 def setup(store):
-  #setup a clean store
-  for bag_name in ["jon_private","ben_private","osmosoft_private","subscriptions.daily"]:
-    bag = Bag(bag_name)
-    try:
-      store.delete(bag)
-    except NoBagError:
-      pass
-    store.put(bag)
-  pass
+    """
+    setup a clean store
+    """
+    bags = [
+        'jon_private',
+        'ben_private',
+        'osmosoft_private',
+        'subscriptions.daily'
+    ]
+    
+    for bag_name in bags:
+        bag = Bag(bag_name)
+        try:
+            store.delete(bag)
+        except NoBagError:
+            pass
+        store.put(bag)
