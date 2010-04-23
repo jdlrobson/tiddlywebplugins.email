@@ -1,7 +1,6 @@
 """
 TODO: add in policy checking and mapping email addresses to users
 """
-
 from tiddlyweb.commands import make_command
 from tiddlyweb.model.bag import Bag
 from tiddlyweb.model.tiddler import Tiddler
@@ -11,7 +10,8 @@ from tiddlyweb import control
 from tiddlywebplugins.utils import get_store
 from tiddlyweb.store import Store,NoTiddlerError, NoBagError, NoRecipeError
 from tiddlyweb.config import config
-
+import feedparser
+import datetime
 DEFAULT_SUBSCRIPTION = "daily"
 
 @make_command()
@@ -28,7 +28,7 @@ def parse_input(raw):
   email_to_send = handle_email(email)
   smtp.send(email_to_send)
   """
-
+  
 def determine_bag(emailAddress):
   handle,host = emailAddress.split("@")
   host_bits=  host.split(".")
@@ -39,7 +39,6 @@ def get_subscriptions_bag(store):
   try:
     store.get(Bag(subscription_bag))
   except NoBagError:
-    print "xhere"
     store.put(Bag(subscription_bag))
   return subscription_bag
   
@@ -79,6 +78,65 @@ def make_subscription(email):
     subscribers_tiddler.text = fromAddress 
     store.put(subscribers_tiddler)
 
+def get_host(atomurl):
+  resource = atomurl.split("/")[2]
+  resource = resource.replace("_private","")
+  return "%s.tiddlyspace.com"%resource
+  
+def make_digest_email(tiddler,environ={}):
+  mail_to_send = False
+  email_addresses = tiddler.text.splitlines()
+  url_suffix = tiddler.title +".atom"
+  today = datetime.date.today()
+  now = today.strftime("%Y%m%d000000")
+  try:
+    before = tiddler.fields["last_generated"]
+  except KeyError:
+    before = "19000220000000" #select a date wayyyyy in the past
+  qs = "?select=modified:>%s&select=modified:<%s"%(before,now) #filter just the changes
+  try:
+    host_details = environ["tiddlyweb.config"]["server_host"]
+    try:
+      scheme = host_details["scheme"]+"://"
+      if scheme == 'file://':
+        qs = ""
+        scheme = ''
+    except KeyError:
+      scheme=""
+    try:
+      host = host_details["host"]
+    except KeyError:
+      host=""
+    try:
+      port =  ":"+host_details["port"]
+    except KeyError:
+      port =""
+  except KeyError:
+    host = ""
+    scheme = ""
+    port = ""
+  feed_url ="%s%s%s%s%s"%(scheme,host,port,url_suffix,qs)
+  feed = feedparser.parse(feed_url)  
+  entries = feed.entries
+  subject = "Email Digest: %s"%feed['feed']['title']
+  if len(entries) == 0:
+    return False
+  body = u"<html>"
+  for entry in entries:
+    body += u'<div><a href="%s">%s</a>%s</div>'%(entry['link'],entry['title'],entry['summary'])
+  body += u"</html>"
+  mail_to_send = {"bcc":email_addresses,"subject":subject,"body":body,"from":"subscriptions@%s"%get_host(tiddler.title)}
+  tiddler.fields['last_generated'] = "20100101010101"#add timestamp
+  return mail_to_send
+  
+@make_command()
+def make_digest(args):
+  bag = args[0]
+  bag = store.get(Bag(bag))
+  for tiddler in bag.list_tiddlers():
+    mail = make_digest_email(tiddler)
+    send_email(mail)
+  
 def retrieve_from_store(email):
     """
     get the tiddler requested by the email from the store 
@@ -133,6 +191,10 @@ def handle_email(email):
     return make_subscription(email)
   elif action =='unsubscribe':
     return delete_subscription(email)
+
+def send_email(mail):
+  print "i dont know how to send email yet"
+  pass
 
 def init(config_in):
     """

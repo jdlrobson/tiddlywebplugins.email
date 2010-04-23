@@ -11,7 +11,7 @@ clean:
 	rm -r store
 
 test:
-	py.test -x test
+	py.test test
 
 dist: test
 	python setup.py sdist
