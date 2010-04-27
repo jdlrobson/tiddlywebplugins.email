@@ -2,9 +2,11 @@ from tiddlyweb.config import config
 import poplib
 import smtplib
 import time
-from tiddlywebplugins import email as mailer
+from tiddlywebplugins import mail as mailer
 import email as emailpy
 from tiddlyweb.commands import make_command
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 def pop_send_mail(email):
   try:
@@ -14,10 +16,35 @@ def pop_send_mail(email):
   except KeyError:
     print "please add {mailer:'smtp':'','user':'','password':''} to your config file"
     return
+
   s=smtplib.SMTP()
   s.connect(smtp)
   s.login(user,password)
-  s.sendmail(email["from"],email["to"],"%s\n\n%s"%(email["subject"],email["body"]))
+  
+  msg = MIMEMultipart('alternative')
+  msg['Subject'] = email['subject']
+  msg['From'] = email["from"]
+  try:
+    msg['To'] = email["to"]
+  except KeyError:
+    msg['To']= "unknown@tampr.co.uk"
+  
+  addressList = [msg['To']]
+  if "bcc" in email:
+    if type(email["bcc"]) == type(""):
+      addressList.append(email["bcc"])
+    elif type(email["bcc"]) == type([]):
+      addressList.extend(email["bcc"])
+
+
+  part1 = MIMEText(email["body"], 'plain')
+  part2 = MIMEText(email["bodyhtml"], 'html')
+  msg.attach(part1)
+  msg.attach(part2)
+
+  mailBody = msg.as_string()
+  print addressList
+  s.sendmail(msg["From"],addressList,mailBody)
   print "sent a mail"
   s.quit()
   pass

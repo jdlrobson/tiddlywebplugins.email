@@ -2,7 +2,7 @@
 Tests for interfacing using the view@... email address
 """
 from test import setup
-from tiddlywebplugins import email as mailer
+from tiddlywebplugins import mail as mailer
 
 from tiddlyweb.model.tiddler import Tiddler 
 from tiddlyweb.config import config

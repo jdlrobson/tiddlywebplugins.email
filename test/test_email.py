@@ -2,9 +2,10 @@
 test some helper functions
 """
 
-from tiddlywebplugins import email as mailer
+from tiddlywebplugins import mail as mailer
 
 def test_get_email_host():
+    #mailagent.pop_send_mail({"from":"bengillies@gmail.com","to":"subscribe@tampr.co.uk","subject":"hello","body":""})
     it = mailer.get_email_host("recipes/foo_public/tiddlers",{"server_host":{"scheme":"http","host":"tiddlyspace.com"}})
     assert it == 'foo.tiddlyspace.com'
     
@@ -23,6 +24,14 @@ def test_get_action():
   
     action = mailer.get_action({"to":"post@jon.tiddlyspace.com"})
     assert action == 'post'
+    
+    action = mailer.get_action({"to":"TiddlyMail <post@jon.tiddlyspace.com>"})
+    assert action == 'post'
+  
+  
+    action = mailer.get_action({"to":"<subscribe@jon.tiddlyspace.com>"})
+    assert action == 'subscribe'
+
   
     action = mailer.get_action({"to":"subscribe@jon.tiddlyspace.com"})
     assert action == 'subscribe'
@@ -42,10 +51,10 @@ def test_get_action():
 def test_determine_bag():
     environ = {"tiddlyweb.config":{"server_host":{"host":"tiddlyspace.com"}}}
     bag= mailer.determine_bag("view@jon.tiddlyspace.com")
-    assert bag == 'jon_private'
+    assert bag == 'bags/jon_private'
   
     bag = mailer.determine_bag("radeedadadadad@jeremy-user.tiddlyspace.com")
-    assert bag == "jeremy-user_private"
+    assert bag == "bags/jeremy-user_private"
 
   
 def test_determine_bag():

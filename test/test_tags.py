@@ -3,7 +3,7 @@ Testing the inclusion of tags in email addresses
 """
 
 from test import setup
-from tiddlywebplugins import email as mailer
+from tiddlywebplugins import mail as mailer
 
 from tiddlyweb.model.tiddler import Tiddler
 from tiddlywebplugins.utils import get_store
